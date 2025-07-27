@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iris Flower Classifier</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            font-size: 0.95em;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .button-container {
+            display: flex;
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .predict-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .predict-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .clear-btn {
+            background: #f8f9fa;
+            color: #666;
+            border: 2px solid #e1e5e9;
+        }
+
+        .clear-btn:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .result {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: 600;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s ease;
+        }
+
+        .result.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .result.setosa {
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            color: #2d5016;
+        }
+
+        .result.versicolor {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            color: #8b4513;
+        }
+
+        .result.virginica {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #6b1e3d;
+        }
+
+        .result.error {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: #721c24;
+        }
+
+        .species-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .example-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .example-btn {
+            padding: 8px 12px;
+            border: 1px solid #667eea;
+            background: transparent;
+            color: #667eea;
+            border-radius: 20px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: none;
+            letter-spacing: normal;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .example-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .input-hints {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 10px;
+            font-size: 0.85em;
+            color: #555;
+        }
+
+        .hint-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌸 Iris Classifier</h1>
+        <p class="subtitle">Predict iris flower species from measurements</p>
+        
+        <div class="example-buttons">
+            <button class="example-btn" onclick="loadExample('setosa')">Setosa Example</button>
+            <button class="example-btn" onclick="loadExample('versicolor')">Versicolor Example</button>
+            <button class="example-btn" onclick="loadExample('virginica')">Virginica Example</button>
+        </div>
+        
+        <form id="irisForm">
+            <div class="form-group">
+                <label for="sepalLength">Sepal Length (cm)</label>
+                <input type="number" id="sepalLength" step="0.1" min="0" max="10" placeholder="e.g., 5.1" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="sepalWidth">Sepal Width (cm)</label>
+                <input type="number" id="sepalWidth" step="0.1" min="0" max="10" placeholder="e.g., 3.5" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="petalLength">Petal Length (cm)</label>
+                <input type="number" id="petalLength" step="0.1" min="0" max="10" placeholder="e.g., 1.4" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="petalWidth">Petal Width (cm)</label>
+                <input type="number" id="petalWidth" step="0.1" min="0" max="10" placeholder="e.g., 0.2" required>
+            </div>
+            
+            <div class="button-container">
+                <button type="submit" class="predict-btn">Predict Species</button>
+                <button type="button" class="clear-btn" onclick="clearForm()">Clear All</button>
+            </div>
+        </form>
+        
+        <div id="result" class="result"></div>
+        
+        <div class="input-hints">
+            <div class="hint-title">Quick Guide:</div>
+            <div><strong>Setosa:</strong> Small petals (1.0-1.9 cm), wide sepals (2.3-4.4 cm)</div>
+            <div><strong>Versicolor:</strong> Medium petals (3.0-5.1 cm), moderate sepals (2.0-3.4 cm)</div>
+            <div><strong>Virginica:</strong> Large petals (4.5-6.9 cm), long sepals (2.2-3.8 cm)</div>
+        </div>
+    </div>
+
+    <script>
+        // KNN Classifier using the EXACT same training data from your Python model
+        class IrisClassifier {
+            constructor() {
+                // Complete Iris dataset (150 samples) - same as your Python model
+                this.trainingData = [
+                    // Setosa (class 0) - 50 samples
+                    {features: [5.1, 3.5, 1.4, 0.2], class: 'setosa'},
+                    {features: [4.9, 3.0, 1.4, 0.2], class: 'setosa'},
+                    {features: [4.7, 3.2, 1.3, 0.2], class: 'setosa'},
+                    {features: [4.6, 3.1, 1.5, 0.2], class: 'setosa'},
+                    {features: [5.0, 3.6, 1.4, 0.2], class: 'setosa'},
+                    {features: [5.4, 3.9, 1.7, 0.4], class: 'setosa'},
+                    {features: [4.6, 3.4, 1.4, 0.3], class: 'setosa'},
+                    {features: [5.0, 3.4, 1.5, 0.2], class: 'setosa'},
+                    {features: [4.4, 2.9, 1.4, 0.2], class: 'setosa'},
+                    {features: [4.9, 3.1, 1.5, 0.1], class: 'setosa'},
+                    {features: [5.4, 3.7, 1.5, 0.2], class: 'setosa'},
+                    {features: [4.8, 3.4, 1.6, 0.2], class: 'setosa'},
+                    {features: [4.8, 3.0, 1.4, 0.1], class: 'setosa'},
+                    {features: [4.3, 3.0, 1.1, 0.1], class: 'setosa'},
+                    {features: [5.8, 4.0, 1.2, 0.2], class: 'setosa'},
+                    {features: [5.7, 4.4, 1.5, 0.4], class: 'setosa'},
+                    {features: [5.4, 3.9, 1.3, 0.4], class: 'setosa'},
+                    {features: [5.1, 3.5, 1.4, 0.3], class: 'setosa'},
+                    {features: [5.7, 3.8, 1.7, 0.3], class: 'setosa'},
+                    {features: [5.1, 3.8, 1.5, 0.3], class: 'setosa'},
+                    {features: [5.4, 3.4, 1.7, 0.2], class: 'setosa'},
+                    {features: [5.1, 3.7, 1.5, 0.4], class: 'setosa'},
+                    {features: [4.6, 3.6, 1.0, 0.2], class: 'setosa'},
+                    {features: [5.1, 3.3, 1.7, 0.5], class: 'setosa'},
+                    {features: [4.8, 3.4, 1.9, 0.2], class: 'setosa'},
+                    {features: [5.0, 3.0, 1.6, 0.2], class: 'setosa'},
+                    {features: [5.0, 3.4, 1.6, 0.4], class: 'setosa'},
+                    {features: [5.2, 3.5, 1.5, 0.2], class: 'setosa'},
+                    {features: [5.2, 3.4, 1.4, 0.2], class: 'setosa'},
+                    {features: [4.7, 3.2, 1.6, 0.2], class: 'setosa'},
+                    {features: [4.8, 3.1, 1.6, 0.2], class: 'setosa'},
+                    {features: [5.4, 3.4, 1.5, 0.4], class: 'setosa'},
+                    {features: [5.2, 4.1, 1.5, 0.1], class: 'setosa'},
+                    {features: [5.5, 4.2, 1.4, 0.2], class: 'setosa'},
+                    {features: [4.9, 3.1, 1.5, 0.2], class: 'setosa'},
+                    {features: [5.0, 3.2, 1.2, 0.2], class: 'setosa'},
+                    {features: [5.5, 3.5, 1.3, 0.2], class: 'setosa'},
+                    {features: [4.9, 3.6, 1.4, 0.1], class: 'setosa'},
+                    {features: [4.4, 3.0, 1.3, 0.2], class: 'setosa'},
+                    {features: [5.1, 3.4, 1.5, 0.2], class: 'setosa'},
+                    {features: [5.0, 3.5, 1.3, 0.3], class: 'setosa'},
+                    {features: [4.5, 2.3, 1.3, 0.3], class: 'setosa'},
+                    {features: [4.4, 3.2, 1.3, 0.2], class: 'setosa'},
+                    {features: [5.0, 3.5, 1.6, 0.6], class: 'setosa'},
+                    {features: [5.1, 3.8, 1.9, 0.4], class: 'setosa'},
+                    {features: [4.8, 3.0, 1.4, 0.3], class: 'setosa'},
+                    {features: [5.1, 3.8, 1.6, 0.2], class: 'setosa'},
+                    {features: [4.6, 3.2, 1.4, 0.2], class: 'setosa'},
+                    {features: [5.3, 3.7, 1.5, 0.2], class: 'setosa'},
+                    {features: [5.0, 3.3, 1.4, 0.2], class: 'setosa'},
+                    
+                    // Versicolor (class 1) - 50 samples
+                    {features: [7.0, 3.2, 4.7, 1.4], class: 'versicolor'},
+                    {features: [6.4, 3.2, 4.5, 1.5], class: 'versicolor'},
+                    {features: [6.9, 3.1, 4.9, 1.5], class: 'versicolor'},
+                    {features: [5.5, 2.3, 4.0, 1.3], class: 'versicolor'},
+                    {features: [6.5, 2.8, 4.6, 1.5], class: 'versicolor'},
+                    {features: [5.7, 2.8, 4.5, 1.3], class: 'versicolor'},
+                    {features: [6.3, 3.3, 4.7, 1.6], class: 'versicolor'},
+                    {features: [4.9, 2.4, 3.3, 1.0], class: 'versicolor'},
+                    {features: [6.6, 2.9, 4.6, 1.3], class: 'versicolor'},
+                    {features: [5.2, 2.7, 3.9, 1.4], class: 'versicolor'},
+                    {features: [5.0, 2.0, 3.5, 1.0], class: 'versicolor'},
+                    {features: [5.9, 3.0, 4.2, 1.5], class: 'versicolor'},
+                    {features: [6.0, 2.2, 4.0, 1.0], class: 'versicolor'},
+                    {features: [6.1, 2.9, 4.7, 1.4], class: 'versicolor'},
+                    {features: [5.6, 2.9, 3.6, 1.3], class: 'versicolor'},
+                    {features: [6.7, 3.1, 4.4, 1.4], class: 'versicolor'},
+                    {features: [5.6, 3.0, 4.5, 1.5], class: 'versicolor'},
+                    {features: [5.8, 2.7, 4.1, 1.0], class: 'versicolor'},
+                    {features: [6.2, 2.2, 4.5, 1.5], class: 'versicolor'},
+                    {features: [5.6, 2.5, 3.9, 1.1], class: 'versicolor'},
+                    {features: [5.9, 3.2, 4.8, 1.8], class: 'versicolor'},
+                    {features: [6.1, 2.8, 4.0, 1.3], class: 'versicolor'},
+                    {features: [6.3, 2.5, 4.9, 1.5], class: 'versicolor'},
+                    {features: [6.1, 2.8, 4.7, 1.2], class: 'versicolor'},
+                    {features: [6.4, 2.9, 4.3, 1.3], class: 'versicolor'},
+                    {features: [6.6, 3.0, 4.4, 1.4], class: 'versicolor'},
+                    {features: [6.8, 2.8, 4.8, 1.4], class: 'versicolor'},
+                    {features: [6.7, 3.0, 5.0, 1.7], class: 'versicolor'},
+                    {features: [6.0, 2.9, 4.5, 1.5], class: 'versicolor'},
+                    {features: [5.7, 2.6, 3.5, 1.0], class: 'versicolor'},
+                    {features: [5.5, 2.4, 3.8, 1.1], class: 'versicolor'},
+                    {features: [5.5, 2.4, 3.7, 1.0], class: 'versicolor'},
+                    {features: [5.8, 2.7, 3.9, 1.2], class: 'versicolor'},
+                    {features: [6.0, 2.7, 5.1, 1.6], class: 'versicolor'},
+                    {features: [5.4, 3.0, 4.5, 1.5], class: 'versicolor'},
+                    {features: [6.0, 3.4, 4.5, 1.6], class: 'versicolor'},
+                    {features: [6.7, 3.1, 4.7, 1.5], class: 'versicolor'},
+                    {features: [6.3, 2.3, 4.4, 1.3], class: 'versicolor'},
+                    {features: [5.6, 3.0, 4.1, 1.3], class: 'versicolor'},
+                    {features: [5.5, 2.5, 4.0, 1.3], class: 'versicolor'},
+                    {features: [5.5, 2.6, 4.4, 1.2], class: 'versicolor'},
+                    {features: [6.1, 3.0, 4.6, 1.4], class: 'versicolor'},
+                    {features: [5.8, 2.6, 4.0, 1.2], class: 'versicolor'},
+                    {features: [5.0, 2.3, 3.3, 1.0], class: 'versicolor'},
+                    {features: [5.6, 2.7, 4.2, 1.3], class: 'versicolor'},
+                    {features: [5.7, 3.0, 4.2, 1.2], class: 'versicolor'},
+                    {features: [5.7, 2.9, 4.2, 1.3], class: 'versicolor'},
+                    {features: [6.2, 2.9, 4.3, 1.3], class: 'versicolor'},
+                    {features: [5.1, 2.5, 3.0, 1.1], class: 'versicolor'},
+                    {features: [5.7, 2.8, 4.1, 1.3], class: 'versicolor'},
+                    
+                    // Virginica (class 2) - 50 samples
+                    {features: [6.3, 3.3, 6.0, 2.5], class: 'virginica'},
+                    {features: [5.8, 2.7, 5.1, 1.9], class: 'virginica'},
+                    {features: [7.1, 3.0, 5.9, 2.1], class: 'virginica'},
+                    {features: [6.3, 2.9, 5.6, 1.8], class: 'virginica'},
+                    {features: [6.5, 3.0, 5.8, 2.2], class: 'virginica'},
+                    {features: [7.6, 3.0, 6.6, 2.1], class: 'virginica'},
+                    {features: [4.9, 2.5, 4.5, 1.7], class: 'virginica'},
+                    {features: [7.3, 2.9, 6.3, 1.8], class: 'virginica'},
+                    {features: [6.7, 2.5, 5.8, 1.8], class: 'virginica'},
+                    {features: [7.2, 3.6, 6.1, 2.5], class: 'virginica'},
+                    {features: [6.5, 3.2, 5.1, 2.0], class: 'virginica'},
+                    {features: [6.4, 2.7, 5.3, 1.9], class: 'virginica'},
+                    {features: [6.8, 3.0, 5.5, 2.1], class: 'virginica'},
+                    {features: [5.7, 2.5, 5.0, 2.0], class: 'virginica'},
+                    {features: [5.8, 2.8, 5.1, 2.4], class: 'virginica'},
+                    {features: [6.4, 3.2, 5.3, 2.3], class: 'virginica'},
+                    {features: [6.5, 3.0, 5.5, 1.8], class: 'virginica'},
+                    {features: [7.7, 3.8, 6.7, 2.2], class: 'virginica'},
+                    {features: [7.7, 2.6, 6.9, 2.3], class: 'virginica'},
+                    {features: [6.0, 2.2, 5.0, 1.5], class: 'virginica'},
+                    {features: [6.9, 3.2, 5.7, 2.3], class: 'virginica'},
+                    {features: [5.6, 2.8, 4.9, 2.0], class: 'virginica'},
+                    {features: [7.7, 2.8, 6.7, 2.0], class: 'virginica'},
+                    {features: [6.3, 2.7, 4.9, 1.8], class: 'virginica'},
+                    {features: [6.7, 3.3, 5.7, 2.1], class: 'virginica'},
+                    {features: [7.2, 3.2, 6.0, 1.8], class: 'virginica'},
+                    {features: [6.2, 2.8, 4.8, 1.8], class: 'virginica'},
+                    {features: [6.1, 3.0, 4.9, 1.8], class: 'virginica'},
+                    {features: [6.4, 2.8, 5.6, 2.1], class: 'virginica'},
+                    {features: [7.2, 3.0, 5.8, 1.6], class: 'virginica'},
+                    {features: [7.4, 2.8, 6.1, 1.9], class: 'virginica'},
+                    {features: [7.9, 3.8, 6.4, 2.0], class: 'virginica'},
+                    {features: [6.4, 2.8, 5.6, 2.2], class: 'virginica'},
+                    {features: [6.3, 2.8, 5.1, 1.5], class: 'virginica'},
+                    {features: [6.1, 2.6, 5.6, 1.4], class: 'virginica'},
+                    {features: [7.7, 3.0, 6.1, 2.3], class: 'virginica'},
+                    {features: [6.3, 3.4, 5.6, 2.4], class: 'virginica'},
+                    {features: [6.4, 3.1, 5.5, 1.8], class: 'virginica'},
+                    {features: [6.0, 3.0, 4.8, 1.8], class: 'virginica'},
+                    {features: [6.9, 3.1, 5.4, 2.1], class: 'virginica'},
+                    {features: [6.7, 3.1, 5.6, 2.4], class: 'virginica'},
+                    {features: [6.9, 3.1, 5.1, 2.3], class: 'virginica'},
+                    {features: [5.8, 2.7, 5.1, 1.9], class: 'virginica'},
+                    {features: [6.8, 3.2, 5.9, 2.3], class: 'virginica'},
+                    {features: [6.7, 3.3, 5.7, 2.5], class: 'virginica'},
+                    {features: [6.7, 3.0, 5.2, 2.3], class: 'virginica'},
+                    {features: [6.3, 2.5, 5.0, 1.9], class: 'virginica'},
+                    {features: [6.5, 3.0, 5.2, 2.0], class: 'virginica'},
+                    {features: [6.2, 3.4, 5.4, 2.3], class: 'virginica'},
+                    {features: [5.9, 3.0, 5.1, 1.8], class: 'virginica'}
+                ];
+            }
+
+            euclideanDistance(point1, point2) {
+                let sum = 0;
+                for (let i = 0; i < point1.length; i++) {
+                    sum += Math.pow(point1[i] - point2[i], 2);
+                }
+                return Math.sqrt(sum);
+            }
+
+            predict(features) {
+                const k = 5;
+                
+                // Calculate distances to all training points
+                const distances = this.trainingData.map(data => ({
+                    distance: this.euclideanDistance(features, data.features),
+                    class: data.class
+                }));
+
+                // Sort by distance and get k nearest neighbors
+                distances.sort((a, b) => a.distance - b.distance);
+                const nearestNeighbors = distances.slice(0, k);
+
+                // Count votes for each class
+                const votes = {};
+                nearestNeighbors.forEach(neighbor => {
+                    votes[neighbor.class] = (votes[neighbor.class] || 0) + 1;
+                });
+
+                // Return class with most votes
+                let maxVotes = 0;
+                let predictedClass = '';
+                for (const [className, voteCount] of Object.entries(votes)) {
+                    if (voteCount > maxVotes) {
+                        maxVotes = voteCount;
+                        predictedClass = className;
+                    }
+                }
+
+                return predictedClass;
+            }
+        }
+
+        const classifier = new IrisClassifier();
+
+        // Example data for each species
+        const examples = {
+            setosa: [5.1, 3.5, 1.4, 0.2],
+            versicolor: [7.0, 3.2, 4.7, 1.4],
+            virginica: [6.3, 3.3, 6.0, 2.5]
+        };
+
+        function loadExample(species) {
+            const values = examples[species];
+            document.getElementById('sepalLength').value = values[0];
+            document.getElementById('sepalWidth').value = values[1];
+            document.getElementById('petalLength').value = values[2];
+            document.getElementById('petalWidth').value = values[3];
+        }
+
+        document.getElementById('irisForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const sepalLength = parseFloat(document.getElementById('sepalLength').value);
+            const sepalWidth = parseFloat(document.getElementById('sepalWidth').value);
+            const petalLength = parseFloat(document.getElementById('petalLength').value);
+            const petalWidth = parseFloat(document.getElementById('petalWidth').value);
+            
+            // Validation
+            if (isNaN(sepalLength) || isNaN(sepalWidth) || isNaN(petalLength) || isNaN(petalWidth)) {
+                showResult('Please fill in all measurements with valid numbers', 'error');
+                return;
+            }
+            
+            if (sepalLength <= 0 || sepalWidth <= 0 || petalLength <= 0 || petalWidth <= 0) {
+                showResult('All measurements must be positive numbers', 'error');
+                return;
+            }
+            
+            if (sepalLength > 10 || sepalWidth > 10 || petalLength > 10 || petalWidth > 10) {
+                showResult('Measurements seem too large. Please check your values.', 'error');
+                return;
+            }
+            
+            const features = [sepalLength, sepalWidth, petalLength, petalWidth];
+            const prediction = classifier.predict(features);
+            
+            showResult(prediction, 'success');
+        });
+
+        function showResult(prediction, type) {
+            const resultDiv = document.getElementById('result');
+            
+            if (type === 'error') {
+                resultDiv.innerHTML = `<div>⚠️ ${prediction}</div>`;
+                resultDiv.className = 'result show error';
+                return;
+            }
+            
+            const speciesInfo = {
+                setosa: {
+                    name: 'Iris Setosa',
+                    description: 'Small flowers with short, wide petals. Often found in cooler climates and wetlands.',
+                    characteristics: 'Distinguished by small petals (usually < 2cm) and relatively wide sepals.'
+                },
+                versicolor: {
+                    name: 'Iris Versicolor',
+                    description: 'Medium-sized flowers with balanced proportions. Common in eastern North America.',
+                    characteristics: 'Medium-sized petals (3-5cm) with moderate sepal dimensions and purple coloration.'
+                },
+                virginica: {
+                    name: 'Iris Virginica',
+                    description: 'Large flowers with long petals. The most robust species of the three.',
+                    characteristics: 'Largest petals (4.5-7cm) and longest sepals with vibrant purple-blue colors.'
+                }
+            };
+            
+            const info = speciesInfo[prediction];
+            
+            resultDiv.innerHTML = `
+                <div style="font-size: 1.3em; margin-bottom: 10px;">
+                    🎯 Predicted Species: <strong>${info.name}</strong>
+                </div>
+                <div class="species-info">
+                    <div style="margin-bottom: 8px;"><strong>Description:</strong> ${info.description}</div>
+                    <div><strong>Key Features:</strong> ${info.characteristics}</div>
+                </div>
+            `;
+            
+            resultDiv.className = `result show ${prediction}`;
+        }
+
+        function clearForm() {
+            document.getElementById('irisForm').reset();
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result';
+            setTimeout(() => {
+                resultDiv.innerHTML = '';
+            }, 300);
+        }
+
+        // Test the classifier on page load
+        console.log('Iris Classifier loaded successfully!');
+        console.log('Test prediction for [5.1, 3.5, 1.4, 0.2]:', classifier.predict([5.1, 3.5, 1.4, 0.2]));
+    </script>
+</body>
+</html>
